@@ -119,8 +119,6 @@ void NavioSysRCInput::Run()
 	connected_buf[sizeof(connected_buf) - 1] = '\0';
 	_connected = (atoi(connected_buf) == 1);
 
-	data.rc_lost = !_connected;
-
 	uint64_t timestamp_sample = hrt_absolute_time();
 
 	for (int i = 0; i < CHANNELS; ++i) {
@@ -145,7 +143,7 @@ void NavioSysRCInput::Run()
 		}
 	}
 
-	if (all_zero) {
+	if (all_zero || !_connected) {
 		return;
 	}
 

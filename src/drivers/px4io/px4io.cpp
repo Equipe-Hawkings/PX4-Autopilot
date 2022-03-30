@@ -202,6 +202,8 @@ private:
 
 	hrt_abstime             _last_status_publish{0};
 
+	uint32_t 		_rc_valid_update_count{0};
+
 	bool			_param_update_force{true};	///< force a parameter update
 	bool			_timer_rates_configured{false};
 
@@ -546,14 +548,14 @@ void PX4IO::Run()
 
 	SmartLock lock_guard(_lock);
 
-	if (hrt_elapsed_time(&_poll_last) >= 20_ms) {
-		/* run at 50 */
+	if (hrt_elapsed_time(&_poll_last) >= 10_ms) {
+		// run at 100 Hz
 		_poll_last = hrt_absolute_time();
 
-		/* pull status and alarms from IO */
+		// pull status and alarms from IO
 		io_get_status();
 
-		/* get raw R/C input from IO */
+		// get raw R/C input from IO
 		io_publish_raw_rc();
 	}
 
@@ -1134,7 +1136,6 @@ int PX4IO::io_get_status()
 		status.status_safety_off      = STATUS_FLAGS & PX4IO_P_STATUS_FLAGS_SAFETY_OFF;
 
 		// PX4IO_P_STATUS_ALARMS
-		status.alarm_rc_lost       = STATUS_ALARMS & PX4IO_P_STATUS_ALARMS_RC_LOST;
 		status.alarm_pwm_error     = STATUS_ALARMS & PX4IO_P_STATUS_ALARMS_PWM_ERROR;
 
 		// PX4IO_P_SETUP_ARMING
@@ -1178,12 +1179,6 @@ int PX4IO::io_get_status()
 			}
 		}
 
-		uint16_t raw_inputs = io_reg_get(PX4IO_PAGE_RAW_RC_INPUT, PX4IO_P_RAW_RC_COUNT);
-
-		for (unsigned i = 0; i < raw_inputs; i++) {
-			status.raw_inputs[i] = io_reg_get(PX4IO_PAGE_RAW_RC_INPUT, PX4IO_P_RAW_RC_BASE + i);
-		}
-
 		status.timestamp = hrt_absolute_time();
 		_px4io_status_pub.publish(status);
 
@@ -1198,11 +1193,18 @@ int PX4IO::io_get_status()
 
 int PX4IO::io_publish_raw_rc()
 {
-	input_rc_s input_rc{};
-	input_rc.timestamp_last_signal = hrt_absolute_time();
+	const hrt_abstime time_now_us =  hrt_absolute_time();
 
-	/* set the RC status flag ORDER MATTERS! */
-	input_rc.rc_lost = !(_status & PX4IO_P_STATUS_FLAGS_RC_OK);
+	const uint32_t rc_valid_update_count = io_reg_get(PX4IO_PAGE_RAW_RC_INPUT, PX4IO_P_RAW_RC_VALID_UPDATE_COUNT);
+	const bool rc_updated = (rc_valid_update_count != _rc_valid_update_count);
+	_rc_valid_update_count = rc_valid_update_count;
+
+	if (!rc_updated) {
+		return 0;
+	}
+
+	input_rc_s input_rc{};
+	input_rc.timestamp_last_signal = time_now_us;
 
 	/* we don't have the status bits, so input_source has to be set elsewhere */
 	input_rc.input_source = input_rc_s::RC_INPUT_SOURCE_UNKNOWN;
@@ -1232,8 +1234,6 @@ int PX4IO::io_publish_raw_rc()
 		channel_count = input_rc_s::RC_INPUT_MAX_CHANNELS;
 	}
 
-	input_rc.timestamp = hrt_absolute_time();
-
 	input_rc.rc_ppm_frame_length = regs[PX4IO_P_RAW_RC_DATA];
 
 	if (!_analog_rc_rssi_stable) {
@@ -1254,9 +1254,7 @@ int PX4IO::io_publish_raw_rc()
 	}
 
 	input_rc.rc_failsafe = (regs[PX4IO_P_RAW_RC_FLAGS] & PX4IO_P_RAW_RC_FLAGS_FAILSAFE);
-	input_rc.rc_lost = !(regs[PX4IO_P_RAW_RC_FLAGS] & PX4IO_P_RAW_RC_FLAGS_RC_OK);
 	input_rc.rc_lost_frame_count = regs[PX4IO_P_RAW_LOST_FRAME_COUNT];
-	input_rc.rc_total_frame_count = regs[PX4IO_P_RAW_FRAME_COUNT];
 	input_rc.channel_count = channel_count;
 
 
@@ -1304,11 +1302,14 @@ int PX4IO::io_publish_raw_rc()
 
 	} else if (_status & PX4IO_P_STATUS_FLAGS_RC_ST24) {
 		input_rc.input_source = input_rc_s::RC_INPUT_SOURCE_PX4IO_ST24;
+
+	} else if (_status & PX4IO_P_STATUS_FLAGS_RC_SUMD) {
+		input_rc.input_source = input_rc_s::RC_INPUT_SOURCE_PX4IO_SUMD;
 	}
 
-	if ((input_rc.channel_count > 0) && !input_rc.rc_lost && !input_rc.rc_failsafe
-	    && (input_rc.input_source != input_rc_s::RC_INPUT_SOURCE_UNKNOWN)) {
+	if (input_rc.input_source != input_rc_s::RC_INPUT_SOURCE_UNKNOWN) {
 
+		input_rc.timestamp = hrt_absolute_time();
 		_to_input_rc.publish(input_rc);
 	}
 

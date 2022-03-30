@@ -372,16 +372,14 @@ void RCUpdate::Run()
 	if (_input_rc_sub.update(&input_rc)) {
 
 		// warn if the channel count is changing (possibly indication of error)
-		if (!input_rc.rc_lost) {
-			if ((_channel_count_previous != input_rc.channel_count)
-			    && (_channel_count_previous > 0)) {
-				PX4_WARN("channel count changed %d -> %d", _channel_count_previous, input_rc.channel_count);
-			}
+		if ((_channel_count_previous != input_rc.channel_count)
+		    && (_channel_count_previous > 0)) {
+			PX4_WARN("channel count changed %d -> %d", _channel_count_previous, input_rc.channel_count);
+		}
 
-			if ((_input_source_previous != input_rc.input_source)
-			    && (_input_source_previous != input_rc_s::RC_INPUT_SOURCE_UNKNOWN)) {
-				PX4_WARN("input source changed %d -> %d", _input_source_previous, input_rc.input_source);
-			}
+		if ((_input_source_previous != input_rc.input_source)
+		    && (_input_source_previous != input_rc_s::RC_INPUT_SOURCE_UNKNOWN)) {
+			PX4_WARN("input source changed %d -> %d", _input_source_previous, input_rc.input_source);
 		}
 
 		const bool input_source_stable = (input_rc.input_source == _input_source_previous);
@@ -400,7 +398,7 @@ void RCUpdate::Run()
 		bool signal_lost = true;
 
 		/* check flags and require at least four channels to consider the signal valid */
-		if (input_rc.rc_lost || input_rc.rc_failsafe || input_rc.channel_count < 4) {
+		if (input_rc.rc_failsafe || input_rc.channel_count < 4) {
 			/* signal is lost or no enough channels */
 			signal_lost = true;
 

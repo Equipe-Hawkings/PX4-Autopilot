@@ -48,12 +48,6 @@ RCInput::RCInput(const char *device) :
 	_cycle_perf(perf_alloc(PC_ELAPSED, MODULE_NAME": cycle time")),
 	_publish_interval_perf(perf_alloc(PC_INTERVAL, MODULE_NAME": publish interval"))
 {
-	// rc input, published to ORB
-	_rc_in.input_source = input_rc_s::RC_INPUT_SOURCE_PX4FMU_PPM;
-
-	// initialize it as RC lost
-	_rc_in.rc_lost = true;
-
 	// initialize raw_rc values and count
 	for (unsigned i = 0; i < input_rc_s::RC_INPUT_MAX_CHANNELS; i++) {
 		_raw_rc_values[i] = UINT16_MAX;
@@ -244,9 +238,7 @@ RCInput::fill_rc_in(uint16_t raw_rc_count_local,
 	}
 
 	_rc_in.rc_failsafe = failsafe;
-	_rc_in.rc_lost = (valid_chans == 0);
 	_rc_in.rc_lost_frame_count = frame_drops;
-	_rc_in.rc_total_frame_count = 0;
 }
 
 void RCInput::set_rc_scan_state(RC_SCAN newState)
@@ -531,10 +523,6 @@ void RCInput::Run()
 							fill_rc_in(_raw_rc_count, _raw_rc_values, cycle_timestamp,
 								   false, false, frame_drops, st24_rssi);
 							_rc_scan_locked = true;
-
-						} else {
-							// if the lost count > 0 means that there is an RC loss
-							_rc_in.rc_lost = true;
 						}
 					}
 				}

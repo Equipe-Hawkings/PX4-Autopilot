@@ -116,7 +116,6 @@
 #define PX4IO_P_STATUS_FLAGS_RC_SUMD		(1 << 13) /* SUMD input is valid */
 
 #define PX4IO_P_STATUS_ALARMS			3	 /* alarm flags - alarms latch, write 1 to a bit to clear it */
-#define PX4IO_P_STATUS_ALARMS_RC_LOST           (1 << 0) /* timed out waiting for RC input */
 #define PX4IO_P_STATUS_ALARMS_PWM_ERROR         (1 << 1) /* PWM configuration or output was bad */
 
 #define PX4IO_P_STATUS_VSERVO			6	/* [2] servo rail voltage in mV */
@@ -129,15 +128,14 @@
 #define PX4IO_PAGE_RAW_RC_INPUT			4
 #define PX4IO_P_RAW_RC_COUNT			0	/* number of valid channels */
 #define PX4IO_P_RAW_RC_FLAGS			1	/* RC detail status flags */
-#define PX4IO_P_RAW_RC_FLAGS_FRAME_DROP		(1 << 0) /* single frame drop */
-#define PX4IO_P_RAW_RC_FLAGS_FAILSAFE		(1 << 1) /* receiver is in failsafe mode */
-#define PX4IO_P_RAW_RC_FLAGS_RC_DSM11		(1 << 2) /* DSM decoding is 11 bit mode */
-#define PX4IO_P_RAW_RC_FLAGS_MAPPING_OK		(1 << 3) /* Channel mapping is ok */
-#define PX4IO_P_RAW_RC_FLAGS_RC_OK		(1 << 4) /* RC reception ok */
+#define PX4IO_P_RAW_RC_FLAGS_FRAME_DROP       (1 << 0) /* single frame drop */
+#define PX4IO_P_RAW_RC_FLAGS_FAILSAFE         (1 << 1) /* receiver is in failsafe mode */
+#define PX4IO_P_RAW_RC_FLAGS_RC_DSM11         (1 << 2) /* DSM decoding is 11 bit mode */
+#define PX4IO_P_RAW_RC_FLAGS_RC_OK            (1 << 3) /* RC reception ok */
 
 #define PX4IO_P_RAW_RC_NRSSI			2	/* [2] Normalized RSSI value, 0: no reception, 255: perfect reception */
 #define PX4IO_P_RAW_RC_DATA			3	/* [1] + [2] Details about the RC source (PPM frame length, Spektrum protocol type) */
-#define PX4IO_P_RAW_FRAME_COUNT			4	/* Number of total received frames (wrapping counter) */
+#define PX4IO_P_RAW_RC_VALID_UPDATE_COUNT	4	/* Number of valid updates (wrapping count of successful decodes) */
 #define PX4IO_P_RAW_LOST_FRAME_COUNT		5	/* Number of total dropped frames (wrapping counter) */
 #define PX4IO_P_RAW_RC_BASE			6	/* CONFIG_RC_INPUT_COUNT channels from here */
 

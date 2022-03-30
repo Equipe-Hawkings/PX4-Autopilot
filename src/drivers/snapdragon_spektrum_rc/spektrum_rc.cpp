@@ -201,9 +201,7 @@ void fill_input_rc(uint16_t raw_rc_count, uint16_t raw_rc_values[input_rc_s::RC_
 	}
 
 	input_rc.rc_failsafe = failsafe;
-	input_rc.rc_lost = (valid_chans == 0);
 	input_rc.rc_lost_frame_count = frame_drops;
-	input_rc.rc_total_frame_count = 0;
 }
 
 int start(int argc, char *argv[])

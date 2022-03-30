@@ -531,9 +531,7 @@ Syslink::handle_raw(syslink_message_t *sys)
 		rc.timestamp_last_signal = rc.timestamp;
 		rc.channel_count = 5;
 		rc.rc_failsafe = false;
-		rc.rc_lost = false;
 		rc.rc_lost_frame_count = 0;
-		rc.rc_total_frame_count = 1;
 		rc.rc_ppm_frame_length = 0;
 		rc.input_source = input_rc_s::RC_INPUT_SOURCE_MAVLINK;
 		rc.rssi = _rssi;

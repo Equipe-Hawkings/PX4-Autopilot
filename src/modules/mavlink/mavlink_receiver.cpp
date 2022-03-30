@@ -1999,9 +1999,7 @@ MavlinkReceiver::handle_message_rc_channels_override(mavlink_message_t *msg)
 	rc.timestamp = rc.timestamp_last_signal = hrt_absolute_time();
 	rc.rssi = input_rc_s::RSSI_MAX;
 	rc.rc_failsafe = false;
-	rc.rc_lost = false;
 	rc.rc_lost_frame_count = 0;
-	rc.rc_total_frame_count = 1;
 	rc.input_source = input_rc_s::RC_INPUT_SOURCE_MAVLINK;
 
 	// channels
